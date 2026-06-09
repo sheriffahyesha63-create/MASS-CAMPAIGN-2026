@@ -3,59 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Registration</title>
+<title>Household Registration</title>
 
 <style>
 body{
     margin:0;
-    font-family: Arial, sans-serif;
+    font-family:Arial,sans-serif;
     background:#ffffff;
     color:#111;
 }
 
-/* HEADER */
 header{
-    background: linear-gradient(90deg,#001f3f,#003366,#00509e);
+    background:linear-gradient(90deg,#001f3f,#003366,#00509e);
     padding:18px;
     text-align:center;
     font-size:20px;
     font-weight:bold;
-    color:#ffffff;
+    color:#fff;
 }
 
-/* FOOTER */
 footer{
-    background: linear-gradient(90deg,#00509e,#003366,#001f3f);
+    background:linear-gradient(90deg,#00509e,#003366,#001f3f);
     padding:12px;
     text-align:center;
     position:fixed;
     bottom:0;
     width:100%;
+    color:#fff;
     font-size:13px;
-    color:#ffffff;
 }
 
-/* FORM CONTAINER */
 .container{
     max-width:420px;
-    margin:15px auto 80px auto;
+    margin:auto;
     padding:15px;
+    padding-bottom:80px;
 }
 
-/* INPUTS */
+.card{
+    background:#fff;
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+}
+
 label{
     display:block;
     margin-top:12px;
+    margin-bottom:5px;
     font-weight:bold;
 }
 
-input, select{
+input,select{
     width:100%;
     padding:10px;
-    margin-top:5px;
-    border-radius:8px;
     border:1px solid #ccc;
-    outline:none;
+    border-radius:8px;
+    box-sizing:border-box;
 }
 
 button{
@@ -64,68 +68,90 @@ button{
     margin-top:20px;
     border:none;
     border-radius:8px;
-    background:#00509e;
-    color:#fff;
+    background:#003366;
+    color:white;
+    font-size:16px;
     font-weight:bold;
+    cursor:pointer;
 }
 
-/* ERROR */
-.error{
-    color:red;
-    font-size:12px;
-    margin-top:4px;
+button:hover{
+    background:#00509e;
 }
 </style>
 </head>
-
 <body>
 
 <header>
-Registration Form
+Household Registration
 </header>
 
 <div class="container">
+<div class="card">
 
 <form id="regForm">
 
-<!-- AUTO DATE -->
 <label>Date</label>
-<input type="text" id="date" readonly>
+<input type="date" id="regDate" required readonly>
 
-<!-- CASCADING -->
 <label>District</label>
-<select id="district"></select>
+<select id="district" required>
+<option value="">Select District</option>
+</select>
 
 <label>Chiefdom</label>
-<select id="chiefdom"></select>
+<select id="chiefdom" required>
+<option value="">Select Chiefdom</option>
+</select>
 
 <label>PHU</label>
-<select id="phu"></select>
+<select id="phu" required>
+<option value="">Select PHU</option>
+</select>
 
 <label>Community</label>
-<select id="community"></select>
+<select id="community" required>
+<option value="">Select Community</option>
+</select>
 
-<label>Household Head Name</label>
-<input type="text" id="hhname">
+<label>Surname</label>
+<input type="text" id="surname" required>
 
-<label>Telephone</label>
-<input type="text" id="phone">
-<div id="phoneError" class="error"></div>
+<label>First Name</label>
+<input type="text" id="firstname" required>
 
-<label>Total Household Members</label>
-<input type="number" id="total">
+<label>Middle Name</label>
+<input type="text" id="middlename">
 
-<label>Pregnant Women</label>
-<input type="number" id="pregnant">
+<label>Telephone Number</label>
+<input type="tel" id="telephone" placeholder="0XXXXXXXX">
 
-<label>Under Five Children</label>
-<input type="number" id="under5">
-<div id="numError" class="error"></div>
+<label>Total Number of People in Household</label>
+<input type="number" id="totalPeople" min="1" required>
 
-<button type="submit">Submit</button>
+<label>Number of Pregnant Women</label>
+<input type="number" id="pregnantWomen" min="0" required>
+
+<label>Number of Under Fives</label>
+<input type="number" id="underFives" min="0" required>
+
+<label>Name of Household Registrar</label>
+<input type="text" id="registrar" required>
+
+<label>Distribution Point</label>
+<input type="text" id="distributionPoint" required>
+
+<label>Generated Token</label>
+<input type="text" id="token" readonly required>
+
+<label>GPS Coordinates</label>
+<input type="text" id="gps" readonly required>
+
+<button type="submit">Register Household</button>
 
 </form>
 
+</div>
 </div>
 
 <footer>
@@ -133,54 +159,190 @@ ICF-SL @ 2026
 </footer>
 
 <script>
+
 // AUTO DATE
-document.getElementById("date").value = new Date().toLocaleDateString();
+document.getElementById('regDate').value =
+new Date().toISOString().split('T')[0];
+
+// GPS CAPTURE
+if(navigator.geolocation){
+navigator.geolocation.getCurrentPosition(
+function(position){
+document.getElementById('gps').value =
+position.coords.latitude + ", " +
+position.coords.longitude;
+},
+function(){
+alert("Unable to capture GPS location.");
+}
+);
+}
+
+// TOKEN GENERATION
+function generateToken(){
+let surname=document.getElementById('surname').value.trim();
+let firstname=document.getElementById('firstname').value.trim();
+let phone=document.getElementById('telephone').value.trim();
+
+document.getElementById('token').value =
+surname + "_" + firstname + "_" + phone;
+}
+
+document.getElementById('surname').addEventListener('input',generateToken);
+document.getElementById('firstname').addEventListener('input',generateToken);
+document.getElementById('telephone').addEventListener('input',generateToken);
 
 // PHONE VALIDATION
-document.getElementById("regForm").addEventListener("submit", function(e){
-    let phone = document.getElementById("phone").value;
-    let phoneError = document.getElementById("phoneError");
+document.getElementById('telephone').addEventListener('blur',function(){
 
-    let total = parseInt(document.getElementById("total").value || 0);
-    let pregnant = parseInt(document.getElementById("pregnant").value || 0);
-    let under5 = parseInt(document.getElementById("under5").value || 0);
-    let numError = document.getElementById("numError");
+let phone=this.value.trim();
 
-    phoneError.textContent = "";
-    numError.textContent = "";
+if(phone==="") return;
 
-    let valid = true;
-
-    // PHONE RULE: 9 digits, starts with 0
-    let phoneRegex = /^0\d{8}$/;
-    if(!phoneRegex.test(phone)){
-        phoneError.textContent = "Phone must be 9 digits and start with 0";
-        valid = false;
-    }
-
-    // TOTAL VALIDATION RULE
-    if(pregnant + under5 > total){
-        numError.textContent = "Pregnant + Under 5 cannot exceed total household members";
-        valid = false;
-    }
-
-    if(!valid){
-        e.preventDefault();
-    }
+if(!/^0\d{8}$/.test(phone)){
+alert("Telephone number must start with 0 and contain exactly 9 digits.");
+this.value="";
+this.focus();
+}
 });
 
-// CASCADING CSV (PLACEHOLDER STRUCTURE)
-// You will later connect cascading.csv via fetch or server
-// Structure expected: District → Chiefdom → PHU → Community
+// HOUSEHOLD VALIDATION
+function validateHousehold(){
 
-let cascadingData = [];
+let total=parseInt(document.getElementById('totalPeople').value)||0;
+let pregnant=parseInt(document.getElementById('pregnantWomen').value)||0;
+let under5=parseInt(document.getElementById('underFives').value)||0;
 
-// Example loader (you will replace with real CSV file)
-fetch("cascading.csv")
-.then(res => res.text())
-.then(data => {
-    console.log("CSV Loaded (to be parsed):", data);
+if(pregnant > total){
+alert("Pregnant women cannot exceed total household population.");
+return false;
+}
+
+if(under5 > total){
+alert("Under-fives cannot exceed total household population.");
+return false;
+}
+
+return true;
+}
+
+// FORM SUBMIT
+document.getElementById('regForm').addEventListener('submit',function(e){
+
+if(!validateHousehold()){
+e.preventDefault();
+return;
+}
+
+alert("Household Registered Successfully");
+
 });
+
+// CASCADING CSV
+let cascadeData=[];
+
+fetch('cascading.csv')
+.then(response=>response.text())
+.then(text=>{
+
+const rows=text.trim().split('\n').slice(1);
+
+rows.forEach(row=>{
+
+const cols=row.split(',');
+
+cascadeData.push({
+district:cols[0],
+chiefdom:cols[1],
+phu:cols[2],
+community:cols[3]
+});
+
+});
+
+loadDistricts();
+
+});
+
+function loadDistricts(){
+
+const district=document.getElementById('district');
+
+let districts=[...new Set(cascadeData.map(x=>x.district))];
+
+districts.forEach(d=>{
+district.add(new Option(d,d));
+});
+
+}
+
+document.getElementById('district').addEventListener('change',function(){
+
+let selected=this.value;
+
+let chiefdom=document.getElementById('chiefdom');
+chiefdom.innerHTML='<option value="">Select Chiefdom</option>';
+
+document.getElementById('phu').innerHTML='<option value="">Select PHU</option>';
+document.getElementById('community').innerHTML='<option value="">Select Community</option>';
+
+let list=[...new Set(
+cascadeData
+.filter(x=>x.district===selected)
+.map(x=>x.chiefdom)
+)];
+
+list.forEach(c=>{
+chiefdom.add(new Option(c,c));
+});
+
+});
+
+document.getElementById('chiefdom').addEventListener('change',function(){
+
+let district=document.getElementById('district').value;
+let chiefdom=this.value;
+
+let phu=document.getElementById('phu');
+phu.innerHTML='<option value="">Select PHU</option>';
+
+document.getElementById('community').innerHTML='<option value="">Select Community</option>';
+
+let list=[...new Set(
+cascadeData
+.filter(x=>x.district===district && x.chiefdom===chiefdom)
+.map(x=>x.phu)
+)];
+
+list.forEach(p=>{
+phu.add(new Option(p,p));
+});
+
+});
+
+document.getElementById('phu').addEventListener('change',function(){
+
+let district=document.getElementById('district').value;
+let chiefdom=document.getElementById('chiefdom').value;
+let phu=this.value;
+
+let community=document.getElementById('community');
+community.innerHTML='<option value="">Select Community</option>';
+
+let list=[...new Set(
+cascadeData
+.filter(x=>x.district===district &&
+x.chiefdom===chiefdom &&
+x.phu===phu)
+.map(x=>x.community)
+)];
+
+list.forEach(c=>{
+community.add(new Option(c,c));
+});
+
+});
+
 </script>
 
 </body>
